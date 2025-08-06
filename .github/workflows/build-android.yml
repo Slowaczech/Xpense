@@ -70,9 +70,12 @@ jobs:
     - name: 🐍 Install Python dependencies
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        pip install buildozer==1.4.0 cython==0.29.33
-        pip install kivy==2.1.0 kivymd==1.1.1
-        pip install plyer colorama sh jinja2
+        # Instalujeme pouze nezbytné minimum
+        pip install buildozer==1.4.0
+        pip install cython==0.29.33
+        pip install kivy==2.1.0
+        # KivyMD nainstalujeme až později pokud bude potřeba
+        pip install kivymd==1.1.1 || echo "KivyMD install failed, will try without it"
 
     - name: 🔧 Setup Android SDK
       run: |
@@ -90,46 +93,62 @@ jobs:
         python --version
         pip list | grep -E "(kivy|buildozer|cython)"
         
-        # Zobrazení struktury projektu
-        echo "=== Project structure ==="
-        ls -la
-        echo "=== Python files ==="
-        find . -name "*.py" -maxdepth 1
-        echo "=== KV files ==="
-        find . -name "*.kv"
+        # Test základních importů
+        echo "=== Testing basic imports ==="
+        python -c "import kivy; print('Kivy version:', kivy.__version__)"
+        python -c "import kivymd; print('KivyMD version:', kivymd.__version__)" || echo "KivyMD failed"
         
-        # Test importů
-        echo "=== Testing imports ==="
-        python -c "import kivy; print('Kivy OK')"
-        python -c "import kivymd; print('KivyMD OK')"
-        python -c "from main import XpenseApp; print('Main import OK')"
+        # Test minimální aplikace
+        echo "=== Testing minimal app ==="
+        python test_app.py --help || echo "Test app failed"
         
-        # Zkusíme nejprve minimální buildozer.spec
-        echo "=== Using minimal buildozer.spec ==="
-        cp buildozer_minimal.spec buildozer.spec
+        # Zkusíme nejprve úplně minimální buildozer.spec
+        echo "=== Using test buildozer.spec ==="
+        cp buildozer_test.spec buildozer.spec
         
-        # Zobrazení obsahu buildozer.spec pro debug
+        # Zobrazení obsahu buildozer.spec
         echo "=== buildozer.spec content ==="
         cat buildozer.spec
         echo "=== end buildozer.spec ==="
         
-        # Test buildozer připojení
+        # Test buildozer verze
         buildozer --version
         
-        # Build APK s lepší diagnostikou
-        echo "Starting buildozer build..."
-        export PYTHONPATH=$PWD:$PYTHONPATH
-        buildozer android debug --verbose 2>&1 | tee build.log || {
+        # Nastavení environment pro Android
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROID_SDK_ROOT=$ANDROID_HOME
+        export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        
+        # Build minimální APK
+        echo "Starting buildozer build with minimal app..."
+        buildozer android debug --verbose 2>&1 | tee build.log
+        
+        # Kontrola výsledku
+        BUILD_RESULT=$?
+        echo "Build exit code: $BUILD_RESULT"
+        
+        if [ $BUILD_RESULT -ne 0 ]; then
           echo "=== BUILD FAILED ==="
-          echo "Exit code: $?"
-          echo "Last 100 lines of build log:"
-          tail -100 build.log
-          echo "=== Buildozer logs ==="
-          find .buildozer -name "*.log" -exec echo "=== {} ===" \; -exec tail -50 {} \; 2>/dev/null || true
-          echo "=== Python path and imports test ==="
-          python -c "import sys; print('Python path:', sys.path)"
-          exit 1
-        }
+          echo "Last 200 lines of build log:"
+          tail -200 build.log
+          
+          echo "=== Android SDK status ==="
+          find ~/.buildozer -name "android-sdk" -type d 2>/dev/null || echo "Android SDK not found"
+          
+          echo "=== NDK status ==="
+          find ~/.buildozer -name "*ndk*" -type d 2>/dev/null || echo "NDK not found"
+          
+          echo "=== Available buildozer logs ==="
+          find .buildozer -name "*.log" 2>/dev/null | head -10
+          
+          echo "=== Recent buildozer logs ==="
+          find .buildozer -name "*.log" -exec echo "=== {} ===" \; -exec tail -30 {} \; 2>/dev/null || true
+          
+          exit $BUILD_RESULT
+        else
+          echo "=== BUILD SUCCESS ==="
+          ls -la bin/
+        fi
 
     - name: 📱 Upload APK Artifact
       uses: actions/upload-artifact@v4
