@@ -1,0 +1,188 @@
+#:kivy 2.1.0
+#:import sp kivy.metrics.sp
+
+<MainScreen>:
+    name: 'main'
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(5)
+        padding: dp(5)
+        
+        MDTopAppBar:
+            title: "Xpense - Přehled"
+            elevation: 2
+            size_hint_y: None
+            height: dp(56)
+            right_action_items: [["cog", lambda x: app.switch_screen('settings')], ["credit-card", lambda x: app.switch_screen('expenses')]]
+            
+        Widget:
+            size_hint_y: None
+            height: dp(10)
+            
+        MDCard:
+            size_hint: 1, None
+            height: dp(180)
+            elevation: 3
+            padding: dp(15)
+            md_bg_color: app.theme_cls.primary_color
+            radius: [10, 10, 10, 10]
+            
+            MDBoxLayout:
+                orientation: 'vertical'
+                spacing: dp(8)
+                
+                MDLabel:
+                    id: daily_budget_label
+                    text: "Denní rozpočet: 0 Kč"
+                    font_style: "H5"
+                    theme_text_color: "Primary"
+                    text_color: 1, 1, 1, 1
+                    halign: "center"
+                    size_hint_y: None
+                    height: dp(40)
+                    
+                MDLabel:
+                    id: days_label  
+                    text: "Dnů do výplaty: 0"
+                    font_style: "Subtitle1"
+                    text_color: 1, 1, 1, 0.8
+                    halign: "center"
+                    size_hint_y: None
+                    height: dp(30)
+                    
+                MDLabel:
+                    id: expenses_label
+                    text: "Zbývající výdaje: 0 Kč"
+                    font_style: "Body1"
+                    text_color: 1, 1, 1, 0.8
+                    halign: "center"
+                    size_hint_y: None
+                    height: dp(25)
+                    
+        Widget:
+            size_hint_y: None
+            height: dp(20)
+                    
+        MDRaisedButton:
+            text: "AKTUALIZOVAT PŘEHLED"
+            size_hint: 1, None
+            height: dp(48)
+            md_bg_color: app.theme_cls.accent_color
+            on_release: app.update_main_screen()
+            
+        Widget:
+
+<SettingsScreen>:
+    name: 'settings'
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: 0
+        
+        MDTopAppBar:
+            title: "Nastavení"
+            size_hint_y: None
+            height: dp(56)
+            left_action_items: [["arrow-left", lambda x: app.switch_screen('main')]]
+            
+        MDScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            
+            MDBoxLayout:
+                orientation: 'vertical'
+                spacing: dp(40)
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [dp(20), dp(50), dp(20), dp(50)]
+                
+                MDCard:
+                    size_hint: 1, None
+                    height: dp(80)
+                    elevation: 1
+                    padding: dp(15)
+                    
+                    MDTextField:
+                        id: income_field
+                        hint_text: "Měsíční příjem (Kč)"
+                        helper_text: ""
+                        input_filter: "float"
+                        multiline: False
+                        line_color_normal: app.theme_cls.primary_color
+                        line_color_focus: app.theme_cls.primary_color
+                        font_size: sp(16)
+                
+                MDCard:
+                    size_hint: 1, None
+                    height: dp(80)
+                    elevation: 1
+                    padding: dp(15)
+                    
+                    MDTextField:
+                        id: payday_field
+                        hint_text: "Den výplaty (1-31)"
+                        helper_text: ""
+                        input_filter: "int"
+                        multiline: False
+                        line_color_normal: app.theme_cls.primary_color
+                        line_color_focus: app.theme_cls.primary_color
+                        font_size: sp(16)
+                    
+                MDCard:
+                    size_hint: 1, None
+                    height: dp(80)
+                    elevation: 1
+                    padding: dp(15)
+                    
+                    MDTextField:
+                        id: balance_field
+                        hint_text: "Aktuální zůstatek (Kč)"
+                        helper_text: ""
+                        input_filter: "float"
+                        multiline: False
+                        line_color_normal: app.theme_cls.primary_color
+                        line_color_focus: app.theme_cls.primary_color
+                        font_size: sp(16)
+                    
+                Widget:
+                    size_hint_y: None
+                    height: dp(50)
+                    
+                MDCard:
+                    size_hint: 1, None
+                    height: dp(70)
+                    elevation: 2
+                    padding: dp(10)
+                    
+                    MDRaisedButton:
+                        text: "ULOŽIT NASTAVENÍ"
+                        size_hint: 1, 1
+                        md_bg_color: app.theme_cls.primary_color
+                        font_size: sp(16)
+                        elevation: 0
+                        on_release: app.save_settings()
+                    
+                Widget:
+                    size_hint_y: None
+                    height: dp(150)
+
+<ExpensesScreen>:
+    name: 'expenses'
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: 0
+        
+        MDTopAppBar:
+            title: "Pravidelné výdaje"
+            size_hint_y: None
+            height: dp(56)
+            left_action_items: [["arrow-left", lambda x: app.switch_screen('main')]]
+            right_action_items: [["plus", lambda x: app.show_add_expense_dialog()]]
+            
+        MDScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            
+            MDList:
+                id: expenses_list
+                spacing: dp(5)
+                padding: [dp(10), dp(10)]
