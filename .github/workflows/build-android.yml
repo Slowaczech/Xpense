@@ -17,13 +17,13 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 🐍 Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
         cache: 'pip'
 
     - name: ☕ Setup Java
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'openjdk'
         java-version: '11'
@@ -53,7 +53,7 @@ jobs:
           ccache
 
     - name: 🔧 Cache build tools
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.buildozer
@@ -79,7 +79,7 @@ jobs:
         buildozer android debug --verbose
 
     - name: 📱 Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: xpense-debug-apk
         path: bin/*.apk
@@ -87,7 +87,7 @@ jobs:
 
     - name: 🏷️ Create Release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v1.0.${{ github.run_number }}
         name: "🚀 Xpense v1.0.${{ github.run_number }}"
