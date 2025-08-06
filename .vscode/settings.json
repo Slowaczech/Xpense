@@ -1,0 +1,12 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportOptionalMemberAccess": "none",
+        "reportGeneralTypeIssues": "warning"
+    },
+    "python.analysis.exclude": [
+        "**/__pycache__",
+        "**/.git",
+        "**/test_*.py"
+    ]
+}

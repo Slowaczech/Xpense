@@ -1,5 +1,2 @@
 kivy==2.1.0
 kivymd==1.1.1
-buildozer==1.4.0
-plyer
-cython==0.29.33

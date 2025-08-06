@@ -27,13 +27,10 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.snackbar import Snackbar
 from kivy.lang import Builder
 from kivy.metrics import dp
-
 from datetime import datetime, timedelta
 import sqlite3
 import os
 from utils import InputValidator, DateHelper, ErrorHandler
-
-# Type hints fix pro Pylance
 from typing import Optional
 
 
