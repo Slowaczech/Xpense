@@ -70,8 +70,9 @@ jobs:
     - name: 🐍 Install Python dependencies
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        pip install buildozer==1.5.0 cython==0.29.33
-        pip install kivy[base]==2.1.0 kivymd==1.2.0
+        pip install buildozer==1.4.0 cython==0.29.33
+        pip install kivy==2.1.0 kivymd==1.1.1
+        pip install plyer colorama sh jinja2
 
     - name: 🔧 Setup Android SDK
       run: |
@@ -85,23 +86,37 @@ jobs:
         
     - name: 🔨 Build with Buildozer
       run: |
+        # Zobrazení Python verze pro debug
+        python --version
+        pip list | grep -E "(kivy|buildozer|cython)"
+        
         # Vytvoření prázdného main.py __version__ pokud neexistuje
         if ! grep -q "__version__" main.py; then
           echo '__version__ = "1.0"' >> main.py
         fi
         
-        # Inicializace buildozer pokud buildozer.spec neexistuje
+        # Kontrola buildozer.spec
         if [ ! -f "buildozer.spec" ]; then
-          buildozer init
+          echo "ERROR: buildozer.spec not found!"
+          exit 1
         fi
         
-        # Aktualizace buildozer.spec pro GitHub Actions
-        sed -i 's/^#.*android.accept_sdk_license.*/android.accept_sdk_license = True/' buildozer.spec
+        # Zobrazení obsahu buildozer.spec pro debug
+        echo "=== buildozer.spec content ==="
+        cat buildozer.spec
+        echo "=== end buildozer.spec ==="
+        
+        # Test buildozer připojení
+        buildozer --version
         
         # Build APK s lepší diagnostikou
-        buildozer android debug --verbose || {
-          echo "Build failed, showing last 50 lines of .buildozer log:"
-          find .buildozer -name "*.log" -exec tail -50 {} \;
+        echo "Starting buildozer build..."
+        buildozer android debug --verbose 2>&1 | tee build.log || {
+          echo "=== BUILD FAILED ==="
+          echo "Last 100 lines of build log:"
+          tail -100 build.log
+          echo "=== Buildozer logs ==="
+          find .buildozer -name "*.log" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || true
           exit 1
         }
 
