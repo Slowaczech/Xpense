@@ -1,0 +1,55 @@
+name: 🐳 Build Xpense Android APK (Docker)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-with-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🐳 Build APK using Docker
+      run: |
+        # Vytvoříme Dockerfile pro Buildozer
+        cat > Dockerfile << 'EOF'
+        FROM kivy/buildozer:latest
+        
+        # Nastavení working directory
+        WORKDIR /app
+        
+        # Kopírování projektu
+        COPY . /app/
+        
+        # Nastavení environmentu
+        ENV ANDROID_HOME=/opt/android-sdk-linux
+        ENV PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        
+        # Build příkaz
+        CMD ["buildozer", "android", "debug", "--verbose"]
+        EOF
+        
+        # Build Docker image
+        docker build -t xpense-builder .
+        
+        # Spuštění build procesu
+        docker run --rm -v $(pwd):/app xpense-builder || {
+          echo "Docker build failed, trying alternative approach..."
+          exit 1
+        }
+
+    - name: 📱 Upload APK
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: xpense-docker-apk-${{ github.run_number }}
+        path: bin/*.apk
+        retention-days: 30
+        if-no-files-found: warn
