@@ -1,0 +1,74 @@
+name: 🐳 Docker Isolated Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+
+    - name: � Create test files
+      run: |
+        cat > main.py << 'EOF'
+        from kivy.app import App
+        from kivy.uix.label import Label
+        class TestApp(App):
+            def build(self):
+                return Label(text="Test")
+        if __name__ == "__main__":
+            TestApp().run()
+        EOF
+        
+        cat > buildozer.spec << 'EOF'
+        [app]
+        title = TestApp
+        package.name = testapp
+        package.domain = org.example
+        source.dir = .
+        version = 1.0
+        requirements = python3,kivy==2.0.0
+        
+        [buildozer]
+        log_level = 2
+        
+        [app:android]
+        android.api = 28
+        android.minapi = 21
+        android.ndk = 19b
+        android.accept_sdk_license = True
+        EOF
+
+    - name: 🐳 Run build in Docker
+      run: |
+        docker run --rm -v $(pwd):/app \
+          --workdir /app \
+          --env ANDROID_HOME=/opt/android-sdk \
+          kivy/buildozer:latest \
+          bash -c "
+            echo '=== Environment ==='
+            python3 --version
+            java -version 2>&1 | head -2
+            buildozer version
+            echo '=== Building ==='
+            buildozer android debug --verbose 2>&1 | tee build.log || {
+              echo '=== BUILD FAILED ==='
+              tail -50 build.log
+              exit 1
+            }
+          "
+
+    - name: 📊 Upload results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-build-${{ github.run_number }}
+        path: |
+          bin/*.apk
+          build.log
+          .buildozer/android/platform/build-*/build.log
+        if-no-files-found: warn
