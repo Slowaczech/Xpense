@@ -33,6 +33,9 @@ import sqlite3
 import os
 from utils import InputValidator, DateHelper, ErrorHandler
 
+# Type hints fix pro Pylance
+from typing import Optional
+
 
 class DatabaseManager:
     """Optimalizovaný databázový manager pro SQLite"""
@@ -240,7 +243,7 @@ class XpenseApp(MDApp):
         super().__init__(**kwargs)
         self.db = DatabaseManager()
         self.calculator = FinanceCalculator()
-        self.dialog = None
+        self.dialog: Optional[MDDialog] = None
         
     def build(self):
         """Sestavení aplikace"""
@@ -413,7 +416,7 @@ class XpenseApp(MDApp):
     def show_add_expense_dialog(self):
         """Dialog pro přidání výdaje"""
         if self.dialog:
-            self.dialog.dismiss()
+            self.dialog.dismiss()  # type: ignore
             self.dialog = None  # Uvolnění paměti
         
         content = MDBoxLayout(
@@ -509,7 +512,7 @@ class XpenseApp(MDApp):
                 MDRaisedButton(
                     text="ZRUŠIT",
                     theme_text_color="Primary",
-                    on_release=lambda x: self.dialog.dismiss()
+                    on_release=lambda x: self.dialog.dismiss() if self.dialog else None  # type: ignore
                 ),
                 MDRaisedButton(
                     text="PŘIDAT",
@@ -561,7 +564,7 @@ class XpenseApp(MDApp):
             self.db.add_expense(validated_name, validated_amount, validated_day)
             self.load_expenses()
             if self.dialog:
-                self.dialog.dismiss()
+                self.dialog.dismiss()  # type: ignore
                 self.dialog = None  # Uvolnění paměti
             self.show_snackbar(f"✅ Výdaj '{validated_name}' byl přidán!")
             
@@ -572,7 +575,7 @@ class XpenseApp(MDApp):
     def show_delete_expense_dialog(self, expense_id):
         """Dialog pro potvrzení smazání výdaje"""
         if self.dialog:
-            self.dialog.dismiss()
+            self.dialog.dismiss()  # type: ignore
             self.dialog = None  # Uvolnění paměti
             
         # Najdeme název výdaje
@@ -593,7 +596,7 @@ class XpenseApp(MDApp):
                 MDRaisedButton(
                     text="ZRUŠIT",
                     theme_text_color="Primary",
-                    on_release=lambda x: self.dialog.dismiss()
+                    on_release=lambda x: self.dialog.dismiss() if self.dialog else None  # type: ignore
                 ),
                 MDRaisedButton(
                     text="SMAZAT",
@@ -608,7 +611,7 @@ class XpenseApp(MDApp):
         """Potvrzení smazání výdaje"""
         self.delete_expense(expense_id)
         if self.dialog:
-            self.dialog.dismiss()
+            self.dialog.dismiss()  # type: ignore
             self.dialog = None  # Uvolnění paměti
 
     def delete_expense(self, expense_id):
