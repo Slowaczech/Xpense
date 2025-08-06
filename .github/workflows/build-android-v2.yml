@@ -50,12 +50,7 @@ jobs:
           libffi-dev \
           libssl-dev \
           build-essential \
-          ccache \
-          ant \
-          openjdk-8-jdk \
-          libgl1-mesa-dev \
-          libgles2-mesa-dev \
-          xvfb
+          ccache
 
     - name: 🔧 Cache build tools
       uses: actions/cache@v4
@@ -70,19 +65,9 @@ jobs:
     - name: 🐍 Install Python dependencies
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        pip install buildozer==1.5.0 cython==0.29.33
-        pip install kivy[base]==2.1.0 kivymd==1.2.0
+        pip install buildozer cython==0.29.33
+        pip install kivy kivymd
 
-    - name: 🔧 Setup Android SDK
-      run: |
-        # Vytvoření buildozer adresáře
-        mkdir -p ~/.buildozer/android
-        
-        # Nastavení environment variables pro Android
-        export ANDROID_API="30"
-        export ANDROID_SDK_ROOT="$HOME/.buildozer/android/platform/android-sdk"
-        export ANDROID_NDK_ROOT="$HOME/.buildozer/android/platform/android-ndk-r23c"
-        
     - name: 🔨 Build with Buildozer
       run: |
         # Vytvoření prázdného main.py __version__ pokud neexistuje
@@ -90,20 +75,8 @@ jobs:
           echo '__version__ = "1.0"' >> main.py
         fi
         
-        # Inicializace buildozer pokud buildozer.spec neexistuje
-        if [ ! -f "buildozer.spec" ]; then
-          buildozer init
-        fi
-        
-        # Aktualizace buildozer.spec pro GitHub Actions
-        sed -i 's/^#.*android.accept_sdk_license.*/android.accept_sdk_license = True/' buildozer.spec
-        
-        # Build APK s lepší diagnostikou
-        buildozer android debug --verbose || {
-          echo "Build failed, showing last 50 lines of .buildozer log:"
-          find .buildozer -name "*.log" -exec tail -50 {} \;
-          exit 1
-        }
+        # Build APK
+        buildozer android debug --verbose
 
     - name: 📱 Upload APK Artifact
       uses: actions/upload-artifact@v4
