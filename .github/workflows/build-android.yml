@@ -90,16 +90,23 @@ jobs:
         python --version
         pip list | grep -E "(kivy|buildozer|cython)"
         
-        # Vytvoření prázdného main.py __version__ pokud neexistuje
-        if ! grep -q "__version__" main.py; then
-          echo '__version__ = "1.0"' >> main.py
-        fi
+        # Zobrazení struktury projektu
+        echo "=== Project structure ==="
+        ls -la
+        echo "=== Python files ==="
+        find . -name "*.py" -maxdepth 1
+        echo "=== KV files ==="
+        find . -name "*.kv"
         
-        # Kontrola buildozer.spec
-        if [ ! -f "buildozer.spec" ]; then
-          echo "ERROR: buildozer.spec not found!"
-          exit 1
-        fi
+        # Test importů
+        echo "=== Testing imports ==="
+        python -c "import kivy; print('Kivy OK')"
+        python -c "import kivymd; print('KivyMD OK')"
+        python -c "from main import XpenseApp; print('Main import OK')"
+        
+        # Zkusíme nejprve minimální buildozer.spec
+        echo "=== Using minimal buildozer.spec ==="
+        cp buildozer_minimal.spec buildozer.spec
         
         # Zobrazení obsahu buildozer.spec pro debug
         echo "=== buildozer.spec content ==="
@@ -111,12 +118,16 @@ jobs:
         
         # Build APK s lepší diagnostikou
         echo "Starting buildozer build..."
+        export PYTHONPATH=$PWD:$PYTHONPATH
         buildozer android debug --verbose 2>&1 | tee build.log || {
           echo "=== BUILD FAILED ==="
+          echo "Exit code: $?"
           echo "Last 100 lines of build log:"
           tail -100 build.log
           echo "=== Buildozer logs ==="
-          find .buildozer -name "*.log" -exec echo "=== {} ===" \; -exec cat {} \; 2>/dev/null || true
+          find .buildozer -name "*.log" -exec echo "=== {} ===" \; -exec tail -50 {} \; 2>/dev/null || true
+          echo "=== Python path and imports test ==="
+          python -c "import sys; print('Python path:', sys.path)"
           exit 1
         }
 

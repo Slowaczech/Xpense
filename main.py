@@ -634,4 +634,5 @@ class XpenseApp(MDApp):
 
 
 if __name__ == '__main__':
-    XpenseApp().run()
+    app = XpenseApp()
+    app.run()
