@@ -25,7 +25,7 @@ jobs:
     - name: ☕ Setup Java
       uses: actions/setup-java@v4
       with:
-        distribution: 'openjdk'
+        distribution: 'temurin'
         java-version: '11'
 
     - name: 📦 Install system dependencies
