@@ -2,6 +2,11 @@ name: 🔧 Build APK (Buildozer Template)
 
 on:
   workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug output'
+        required: false
+        default: 'false'
   
 jobs:
   build-template:
